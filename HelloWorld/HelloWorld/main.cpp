@@ -7,6 +7,7 @@ constexpr auto HEIGHT = (600);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void initGlad();
+void processInput(GLFWwindow* window);
 
 int main() 
 {
@@ -41,6 +42,12 @@ int main()
 	// game loop
 	while (!glfwWindowShouldClose(window))
 	{
+		processInput(window);
+
+		// clear screen and then draw stuff on it
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -60,4 +67,10 @@ void initGlad()
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 }
