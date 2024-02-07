@@ -13,7 +13,7 @@ unsigned int createTexture(const char* fileName, GLenum imageFormat);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-bool isTriangle = true;
+bool isTriangle = false;
 
 int main()
 {
