@@ -7,7 +7,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow* window);
-unsigned int createTexture();
+unsigned int createTexture(const char* fileName, GLenum imageFormat);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -74,7 +74,7 @@ int main()
         2, 1, 4    // second triangle
     };
 
-    unsigned int VBO, VAO, EBO, texture;
+    unsigned int VBO, VAO, EBO, texture1, texture2;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -99,15 +99,17 @@ int main()
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    texture = createTexture();
+    texture1 = createTexture("container.jpg", GL_RGB);
+    texture2 = createTexture("awesomeface.png", GL_RGBA);
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0);
 
-
-    // uncomment this call to draw in wireframe polygons.
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // Associate texture unit to shader samplers
+    ourShader.use(); // don't forget to activate the shader before setting uniforms!  
+    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0); // set it manually
+    ourShader.setInt("texture2", 1); // or with shader class
 
     // render loop
     // -----------
@@ -125,7 +127,11 @@ int main()
         // draw our first triangle
         ourShader.use();
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
         //glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -188,7 +194,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-unsigned int createTexture() {
+unsigned int createTexture(const char* fileName, GLenum imageFormat) {
+    static bool isFirstLoad = true;
+
+    if (isFirstLoad) {
+        isFirstLoad = false;
+        stbi_set_flip_vertically_on_load(true);
+    }
+
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -201,11 +214,11 @@ unsigned int createTexture() {
 
     // load and generate the texture
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load(fileName, &width, &height, &nrChannels, 0);
 
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, imageFormat, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
