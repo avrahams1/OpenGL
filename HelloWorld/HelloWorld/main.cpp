@@ -7,7 +7,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow* window);
-unsigned int createTexture(const char* fileName, GLenum imageFormat);
+unsigned int createTexture(const char* fileName, GLenum imageFormat, GLint texParamType);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -61,11 +61,12 @@ int main()
     // next 3 - vertex color
     // next 2 - texture coordinates
     float vertices[] = {
-        0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 1.0f,  // triangle top  
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // triangle/square left  
-        0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // triangle/square right  
-        0.5f,  0.5f, 0.0f, 0.25f, 0.25f, 0.25f, 1.0f, 1.0f,  // square top right
-        -0.5f,  0.5f, 0.0f, 0.75f, 0.75f, 0.75f, 0.0f, 1.0f,  // square top left 
+        // positions            colors                  texture coords
+         0.0f,  0.5f, 0.0f,     1.0f,  0.0f,  0.0f,     0.5f, 1.0f,  // triangle top  
+        -0.5f, -0.5f, 0.0f,     0.0f,  1.0f,  0.0f,     0.0f, 0.0f, // triangle/square left  
+         0.5f, -0.5f, 0.0f,     0.0f,  0.0f,  1.0f,     1.0f, 0.0f, // triangle/square right  
+         0.5f,  0.5f, 0.0f,     0.25f, 0.25f, 0.25f,    1.0f, 1.0f,  // square top right
+        -0.5f,  0.5f, 0.0f,     0.75f, 0.75f, 0.75f,    0.0f, 1.0f,  // square top left 
     };
 
     unsigned int indices[] = {  // note that we start from 0!
@@ -99,8 +100,8 @@ int main()
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    texture1 = createTexture("container.jpg", GL_RGB);
-    texture2 = createTexture("awesomeface.png", GL_RGBA);
+    texture1 = createTexture("container.jpg", GL_RGB, GL_REPEAT);
+    texture2 = createTexture("awesomeface.png", GL_RGBA, GL_REPEAT);
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
@@ -188,13 +189,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
+    if (action != GLFW_PRESS) return;
+
+    switch(key) {
+    case GLFW_KEY_SPACE:
         isTriangle = !isTriangle;
+        break;
     }
 }
 
-unsigned int createTexture(const char* fileName, GLenum imageFormat) {
+unsigned int createTexture(const char* fileName, GLenum imageFormat, GLint texParamType) {
     static bool isFirstLoad = true;
 
     if (isFirstLoad) {
@@ -207,8 +211,8 @@ unsigned int createTexture(const char* fileName, GLenum imageFormat) {
     glBindTexture(GL_TEXTURE_2D, texture);
 
     // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texParamType);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texParamType);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
